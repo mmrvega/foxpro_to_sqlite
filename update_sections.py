@@ -90,9 +90,10 @@ def main():
         update_table_column(cursor, "7535", "M_STATUS")
         update_table_column(cursor, "754", "CONCE")
         update_table_column(cursor, "756", "NE")
-        update_column_values(cursor, "SIND", {"1": "فعال", "4": "غير فعال"})
-        update_column_values(cursor, "SEX", {"1": "ذكر", "2": "انثى"})
-        update_column_values(cursor, "KHOM", {"1": "صباحي", "2": "مسائي"})
+        update_column_values("SIND", {"1": "فعال", "4": "غير فعال"})
+        update_column_values("SEX", {"1": "ذكر", "2": "انثى"})
+        update_column_values("KHOM", {"1": "صباحي", "2": "مسائي"})
+        update_column_values("KMOH", {"1": "أمومة", "2": "أجازة طويلة"})
         conn.commit()
         print("\nAll updates committed successfully.")
 
