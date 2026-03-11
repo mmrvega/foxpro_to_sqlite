@@ -1,6 +1,30 @@
 import sqlite3
 import os
 
+def update_column_values(cursor, column_name, mapping_dict):
+    try:
+        print(f"Executing update logic for {column_name}...")
+        
+        # Build the WHEN clauses from the dictionary
+        case_clauses = " ".join([
+            f"WHEN {column_name} = '{k}' THEN '{v}'" 
+            for k, v in mapping_dict.items()
+        ])
+        
+        sql = f"""
+            UPDATE FILE_ALL 
+            SET {column_name} = CASE 
+                {case_clauses} 
+                ELSE {column_name} 
+            END;
+        """
+        
+        cursor.execute(sql)
+        print(f"Rows affected in {column_name}: {cursor.rowcount}")
+        
+    except Exception as e:
+        print(f"Failed to update {column_name}: {e}")
+
 def update_table_column(cursor, prefix, column_name, table_name="FILE_ALL"):
     """
     General function to update a column in a table based on a code prefix in RC table.
@@ -52,6 +76,7 @@ def main():
         # start update
         update_table_column(cursor, "44", "SECTION") #الشعبة
         update_table_column(cursor, "3", "DES") #العنوان الوظيفي
+        update_table_column(cursor, "3", "DES2") #العنوان الوظيفي في الملاك
         update_table_column(cursor, "5", "OLD_DES")# المهنة للحرفيين
         update_table_column(cursor, "45", "UNIT") #الوحدة
         update_table_column(cursor, "210", "LOC") #الموقع
@@ -62,7 +87,12 @@ def main():
         update_table_column(cursor, "677", "MOH") #الشهادة
         update_table_column(cursor, "7", "IKTE")# الاختصاص 
         update_table_column(cursor, "757", "NAG") # القومية
-
+        update_table_column(cursor, "7535", "M_STATUS")
+        update_table_column(cursor, "754", "CONCE")
+        update_table_column(cursor, "756", "NE")
+        update_column_values(cursor, "SIND", {"1": "فعال", "4": "غير فعال"})
+        update_column_values(cursor, "SEX", {"1": "ذكر", "2": "انثى"})
+        update_column_values(cursor, "KHOM", {"1": "صباحي", "2": "مسائي"})
         conn.commit()
         print("\nAll updates committed successfully.")
 
