@@ -2,8 +2,33 @@ import argparse
 import csv
 import os
 import sys
-from dbfread import DBF
+import time
+from multiprocessing import Pool, cpu_count, Manager
+from dbfread import DBF, FieldParser
 
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
+# Custom DBF Parser to skip invalid dates
+class SafeFieldParser(FieldParser):
+    def parseD(self, *args, **kwargs):
+        try:
+            return super().parseD(*args, **kwargs)
+        except ValueError:
+            return None
+
+def get_process_stats():
+    """Returns current process CPU and Memory usage if psutil is available."""
+    if psutil:
+        p = psutil.Process(os.getpid())
+        mem = p.memory_info().rss / (1024 * 1024) # MB
+        # cpu_percent(interval=None) returns since last call. 
+        # For workers, we'll just report the state at that moment.
+        cpu = p.cpu_percent() 
+        return f" [RAM: {mem:.1f}MB | CPU: {cpu:.1f}%]"
+    return ""
 
 def looks_arabic(s):
     ranges = [('\u0600', '\u06FF'), ('\u0750', '\u077F'), ('\u08A0', '\u08FF'), ('\uFB50', '\uFDFF'), ('\uFE70', '\uFEFF')]
@@ -13,27 +38,10 @@ def looks_arabic(s):
                 return True
     return False
 
-
-def detect_encoding(path, encodings=('cp1256', 'cp1252', 'latin1', 'cp720', 'utf-8')):
-    for enc in encodings:
-        try:
-            table = DBF(path, encoding=enc)
-            for i, _ in enumerate(table):
-                if i >= 20:
-                    break
-            return enc
-        except UnicodeDecodeError:
-            continue
-        except Exception:
-            # allow other exceptions to propagate
-            raise
-    return None
-
-
 def repair_field(s):
     if not isinstance(s, str) or s == '':
         return s
-
+    
     def arabic_count(x):
         return sum(1 for ch in x if looks_arabic(ch))
 
@@ -47,39 +55,20 @@ def repair_field(s):
     for enc_from in enc_from_list:
         try:
             b = s.encode(enc_from, errors='strict')
-        except Exception:
-            try:
-                b = s.encode(enc_from, errors='replace')
-            except Exception:
-                continue
+        except:
+            continue
         for dec_to in dec_to_list:
             try:
-                candidate = b.decode(dec_to, errors='strict')
-            except Exception:
-                try:
-                    candidate = b.decode(dec_to, errors='replace')
-                except Exception:
-                    continue
-            candidates.append(candidate)
-            try:
-                b2 = candidate.encode(enc_from, errors='replace')
-                for dec2 in ('cp1256', 'windows-1256'):
-                    try:
-                        candidate2 = b2.decode(dec2, errors='replace')
-                    except Exception:
-                        continue
-                    candidates.append(candidate2)
-            except Exception:
-                pass
-
-    try_pairs = [('cp1256', 'cp720'), ('windows-1256', 'cp720'), ('cp1252', 'cp720'), ('latin1', 'cp720')]
-    for enc_from, dec_to in try_pairs:
-        try:
-            b = s.encode(enc_from, errors='replace')
-            cand = b.decode(dec_to, errors='replace')
-            candidates.append(cand)
-        except Exception:
-            continue
+                candidate = b.decode(dec_to, errors='replace')
+                candidates.append(candidate)
+            except:
+                continue
+    
+    try:
+        b = s.encode('cp1252', errors='replace')
+        candidates.append(b.decode('cp720', errors='replace'))
+    except:
+        pass
 
     best = s
     best_score = (orig_ar_count, -s.count('?'))
@@ -90,137 +79,145 @@ def repair_field(s):
             best = cand
     return best
 
-
-def convert_and_fix(path, out_path=None, src_encoding=None):
-    if out_path is None:
-        out_path = os.path.splitext(path)[0] + '.csv'
-
-    encodings_to_try = (src_encoding,) if src_encoding else ('cp1256', 'cp1252', 'latin1', 'cp720', 'utf-8')
-    enc = detect_encoding(path, encodings=encodings_to_try)
-    if enc is None:
-        raise UnicodeDecodeError('detect', b'', 0, 1, 'Could not detect a working encoding')
-
-    table = DBF(path, encoding=enc)
-
-    it = iter(table)
-    try:
-        first = next(it)
-    except StopIteration:
-        open(out_path, 'w', encoding='utf-8').close()
-        return 0, enc
-
-    fieldnames = list(first.keys())
-
-    with open(out_path, 'w', encoding='utf-8', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-
-        def write_row(rec):
-            out = {}
-            for k, v in rec.items():
-                if isinstance(v, str):
-                    out[k] = repair_field(v)
-                elif v is None:
-                    out[k] = ''
-                else:
-                    out[k] = str(v)
-            writer.writerow(out)
-
-        write_row(first)
-        count = 1
-        for record in it:
-            write_row(record)
-            count += 1
-
-    return count, enc
-
-
-def process_file(dbf, src_encoding=None):
-    """Worker used by multiprocessing: convert and post-fix one DBF file."""
-    try:
-        out = os.path.splitext(dbf)[0] + '.csv'
-        count, used_enc = convert_and_fix(dbf, out_path=out, src_encoding=src_encoding)
-
-        # run the fixer to catch any remaining mojibake if available
+def detect_encoding(path):
+    for enc in ('cp1256', 'cp1252', 'latin1', 'cp720', 'utf-8'):
         try:
-            import fix_encoding
-            if hasattr(fix_encoding, 'repair_csv'):
-                fixed_out = os.path.splitext(out)[0] + '_fixed.csv'
-                fixed_count, rows = fix_encoding.repair_csv(out, fixed_out)
-                if fixed_count > 0:
-                    os.replace(fixed_out, out)
-                    msg = f'Wrote {count} records to {out} using encoding {used_enc}; post-fix applied ({fixed_count} fields)'
-                else:
-                    try:
-                        os.remove(fixed_out)
-                    except Exception:
-                        pass
-                    msg = f'Wrote {count} records to {out} using encoding {used_enc}; no post-fix changes'
-            else:
-                msg = f'Wrote {count} records to {out} using encoding {used_enc}; fixer not available'
-        except Exception:
-            msg = f'Wrote {count} records to {out} using encoding {used_enc}; fixer not available'
-        return (dbf, True, msg)
+            table = DBF(path, encoding=enc)
+            for i, _ in enumerate(table):
+                if i >= 10: break
+            return enc
+        except:
+            continue
+    return 'cp1256'
+
+def worker_extract(dbf_path, status_dict):
+    start_time = time.time()
+    try:
+        status_dict[dbf_path] = f"Initiating... {get_process_stats()}"
+        enc = detect_encoding(dbf_path)
+        out_path = os.path.splitext(dbf_path)[0] + '.csv'
+        table = DBF(dbf_path, encoding=enc, parserclass=SafeFieldParser)
+        
+        with open(out_path, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            it = iter(table)
+            try:
+                first = next(it)
+                writer.writerow(first.keys())
+                writer.writerow(first.values())
+                count = 1
+                for record in it:
+                    writer.writerow(record.values())
+                    count += 1
+                    if count % 10000 == 0:
+                         status_dict[dbf_path] = f"Extracting {count} rows... {get_process_stats()}"
+                
+                elapsed = time.time() - start_time
+                status_dict[dbf_path] = f"✔ COMPLETED ({count} rows, {elapsed:.1f}s)"
+                return True
+            except StopIteration:
+                status_dict[dbf_path] = "✔ COMPLETED (Empty)"
+                return True
     except Exception as e:
-        return (dbf, False, str(e))
+        status_dict[dbf_path] = f"✘ FAILED - {str(e)}"
+        return False
 
+def worker_fix(csv_path, status_dict):
+    start_time = time.time()
+    if not os.path.exists(csv_path):
+        status_dict[csv_path] = "✘ Not found"
+        return False
+    try:
+        status_dict[csv_path] = f"Initiating Fix... {get_process_stats()}"
+        temp_out = csv_path + ".tmp"
+        fixed_count = 0
+        row_count = 0
+        
+        with open(csv_path, 'r', encoding='utf-8', newline='') as inf:
+            reader = csv.DictReader(inf)
+            fieldnames = reader.fieldnames
+            with open(temp_out, 'w', encoding='utf-8', newline='') as outf:
+                writer = csv.DictWriter(outf, fieldnames=fieldnames)
+                writer.writeheader()
+                for row in reader:
+                    row_count += 1
+                    for k, v in row.items():
+                        if v:
+                            repaired = repair_field(v)
+                            if repaired != v:
+                                row[k] = repaired
+                                fixed_count += 1
+                    writer.writerow(row)
+                    if row_count % 10000 == 0:
+                        status_dict[csv_path] = f"Fixing {row_count} rows... {get_process_stats()}"
 
-def process_file_star(args):
-    return process_file(*args)
-
+        os.replace(temp_out, csv_path)
+        elapsed = time.time() - start_time
+        status_dict[csv_path] = f"✔ FIXED ({fixed_count} fields, {elapsed:.1f}s)"
+        return True
+    except Exception as e:
+        status_dict[csv_path] = f"✘ FAILED - {str(e)}"
+        return False
 
 def main():
-    parser = argparse.ArgumentParser(description='Extract DBF files to UTF-8 CSV and fix Arabic mojibake')
-    parser.add_argument('paths', nargs='*', help='DBF file(s) or directory')
-    parser.add_argument('--all', action='store_true', help='Process all .DBF files in the current directory')
-    parser.add_argument('--encoding', '-e', help='Force source encoding', default=None)
-    parser.add_argument('--workers', '-w', type=int, default=None, help='Number of parallel workers (defaults to CPU count)')
+    parser = argparse.ArgumentParser(description='FoxPro to SQLite High Performance Pipeline')
+    parser.add_argument('--all', action='store_true', help='Process all DBF files')
+    parser.add_argument('--workers', '-w', type=int, default=cpu_count())
     args = parser.parse_args()
 
-    targets = []
-    if args.all:
-        targets = [f for f in os.listdir('.') if f.upper().endswith('.DBF')]
-    elif args.paths:
-        for p in args.paths:
-            if os.path.isdir(p):
-                targets.extend([os.path.join(p, f) for f in os.listdir(p) if f.upper().endswith('.DBF')])
-            else:
-                targets.append(p)
-    else:
-        # If neither --all nor specific paths are provided, show help
+    if not args.all:
         parser.print_help()
-        sys.exit(1)
+        return
 
-    if not targets:
-        print('No DBF files found to process.', file=sys.stderr)
-        sys.exit(2)
+    targets = [f for f in os.listdir('.') if f.upper().endswith('.DBF') and f.upper() != 'RC.DBF']
+    if os.path.exists('RC.DBF'): targets.insert(0, 'RC.DBF')
 
-    # Report total and start multiprocessing
-    total = len(targets)
-    print(f'Found {total} DBF file(s) to process; using multiprocessing')
+    manager = Manager()
+    status_dict = manager.dict()
+    for t in targets: status_dict[t] = "Pending..."
 
-    from multiprocessing import Pool
+    workers = args.workers
+    
+    # --- PHASE 1 ---
+    with Pool(workers) as pool:
+        async_results = [pool.apply_async(worker_extract, (t, status_dict)) for t in targets]
+        while any(not r.ready() for r in async_results):
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print("="*80)
+            print(f" PHASE 1: EXTRACTION | Workers: {workers} | {time.strftime('%H:%M:%S')}")
+            print("="*80)
+            # Sort by size to keep the big boys visible
+            sorted_t = sorted(targets, key=lambda x: os.path.getsize(x) if os.path.exists(x) else 0, reverse=True)
+            for t in sorted_t:
+                print(f" {t:<15} | {status_dict[t]}")
+            time.sleep(1)
 
-    workers = args.workers or os.cpu_count() or 2
-    print(f'Using {workers} worker(s)')
+    # --- PHASE 2 ---
+    csv_targets = [os.path.splitext(t)[0] + '.csv' for t in targets]
+    for c in csv_targets: status_dict[c] = "Pending (Waiting for extraction)..."
+    
+    with Pool(workers) as pool:
+        async_results = [pool.apply_async(worker_fix, (c, status_dict)) for c in csv_targets]
+        while any(not r.ready() for r in async_results):
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print("="*80)
+            print(f" PHASE 2: MOJIBAKE FIX | Workers: {workers} | {time.strftime('%H:%M:%S')}")
+            print("="*80)
+            sorted_c = sorted(csv_targets, key=lambda x: os.path.getsize(x) if os.path.exists(x) else 0, reverse=True)
+            for c in sorted_c:
+                print(f" {c:<15} | {status_dict[c]}")
+            time.sleep(1)
 
-    # prepare args for starmap: (dbf, src_encoding)
-    jobs = [(dbf, args.encoding) for dbf in targets]
+    # --- PHASE 3 ---
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("="*80)
+    print(f" PHASE 3: SQLITE IMPORT | {time.strftime('%H:%M:%S')}")
+    print("="*80)
+    try:
+        import convert_csvs_to_sqlite
+        convert_csvs_to_sqlite.main(['--all'])
+    except Exception as e:
+        print(f" ✘ SQLite Import failed: {e}")
 
-    # use imap_unordered to receive results as each worker finishes and update a progress bar
-    bar_len = 40
-    completed = 0
-    with Pool(processes=workers) as pool:
-        for result in pool.imap_unordered(process_file_star, jobs):
-            completed += 1
-            dbf, success, msg = result
-            filled = int(bar_len * completed / total)
-            bar = '[' + '#' * filled + '-' * (bar_len - filled) + f'] {completed}/{total}'
-            if success:
-                print(f'{bar} {os.path.basename(dbf)}: {msg}', flush=True)
-            else:
-                print(f'{bar} {os.path.basename(dbf)}: ERROR {msg}', file=sys.stderr, flush=True)
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

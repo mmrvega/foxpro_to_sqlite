@@ -91,11 +91,15 @@ def insert_rows(conn, table, columns, rows_iter, batch=500):
     return count
 
 
-def main():
+def main(args_list=None):
     parser = argparse.ArgumentParser(description='Convert CSV files into SQLite tables')
-    parser.add_argument('paths', nargs='*', help='CSV file(s) to import')
-    parser.add_argument('--all', action='store_true', help='Import all CSV files in the current directory')
-    args = parser.parse_args()
+    parser.add_argument('paths', nargs='*', help='CSV file(s) import')
+    parser.add_argument('--all', action='store_true', help='Import all CSV files')
+    
+    if args_list is not None:
+        args = parser.parse_args(args_list)
+    else:
+        args = parser.parse_args()
 
     if args.all:
         csv_files = [os.path.basename(p) for p in glob.glob(os.path.join(BASE, '*.csv'))]
