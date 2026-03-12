@@ -171,20 +171,25 @@ def process_file_star(args):
 
 def main():
     parser = argparse.ArgumentParser(description='Extract DBF files to UTF-8 CSV and fix Arabic mojibake')
-    parser.add_argument('paths', nargs='*', help='DBF file(s) or directory; if omitted all .DBF files in cwd are processed')
+    parser.add_argument('paths', nargs='*', help='DBF file(s) or directory')
+    parser.add_argument('--all', action='store_true', help='Process all .DBF files in the current directory')
     parser.add_argument('--encoding', '-e', help='Force source encoding', default=None)
     parser.add_argument('--workers', '-w', type=int, default=None, help='Number of parallel workers (defaults to CPU count)')
     args = parser.parse_args()
 
     targets = []
-    if not args.paths:
+    if args.all:
         targets = [f for f in os.listdir('.') if f.upper().endswith('.DBF')]
-    else:
+    elif args.paths:
         for p in args.paths:
             if os.path.isdir(p):
                 targets.extend([os.path.join(p, f) for f in os.listdir(p) if f.upper().endswith('.DBF')])
             else:
                 targets.append(p)
+    else:
+        # If neither --all nor specific paths are provided, show help
+        parser.print_help()
+        sys.exit(1)
 
     if not targets:
         print('No DBF files found to process.', file=sys.stderr)
