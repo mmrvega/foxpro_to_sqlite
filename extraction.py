@@ -24,10 +24,17 @@ def get_process_stats():
     if psutil:
         p = psutil.Process(os.getpid())
         mem = p.memory_info().rss / (1024 * 1024) # MB
-        # cpu_percent(interval=None) returns since last call. 
-        # For workers, we'll just report the state at that moment.
-        cpu = p.cpu_percent() 
+        # Use a short interval in workers to get a representative CPU reading
+        cpu = p.cpu_percent(interval=0.1) 
         return f" [RAM: {mem:.1f}MB | CPU: {cpu:.1f}%]"
+    return ""
+
+def get_system_stats():
+    """Returns total system CPU and Memory usage."""
+    if psutil:
+        cpu = psutil.cpu_percent()
+        mem = psutil.virtual_memory().percent
+        return f"TOTAL SYSTEM -> RAM: {mem}% | CPU: {cpu}%"
     return ""
 
 def looks_arabic(s):
@@ -184,7 +191,9 @@ def main():
         while any(not r.ready() for r in async_results):
             os.system('cls' if os.name == 'nt' else 'clear')
             print("="*80)
-            print(f" PHASE 1: EXTRACTION | Workers: {workers} | {time.strftime('%H:%M:%S')}")
+            header = f" PHASE 1: EXTRACTION | Workers: {workers} | {time.strftime('%H:%M:%S')}"
+            print(header)
+            print(get_system_stats())
             print("="*80)
             # Sort by size to keep the big boys visible
             sorted_t = sorted(targets, key=lambda x: os.path.getsize(x) if os.path.exists(x) else 0, reverse=True)
@@ -201,7 +210,9 @@ def main():
         while any(not r.ready() for r in async_results):
             os.system('cls' if os.name == 'nt' else 'clear')
             print("="*80)
-            print(f" PHASE 2: MOJIBAKE FIX | Workers: {workers} | {time.strftime('%H:%M:%S')}")
+            header = f" PHASE 2: MOJIBAKE FIX | Workers: {workers} | {time.strftime('%H:%M:%S')}"
+            print(header)
+            print(get_system_stats())
             print("="*80)
             sorted_c = sorted(csv_targets, key=lambda x: os.path.getsize(x) if os.path.exists(x) else 0, reverse=True)
             for c in sorted_c:
