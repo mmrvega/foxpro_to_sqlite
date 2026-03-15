@@ -219,5 +219,18 @@ def main():
     except Exception as e:
         print(f" ✘ SQLite Import failed: {e}")
 
+    # --- PHASE 4 ---
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("="*80)
+    print(f" PHASE 4: CHANGING CODES WITH EXACT VALUES | {time.strftime('%H:%M:%S')}")
+    print("="*80)
+    try:
+        import update_all_columns
+        update_all_columns.main()
+    except Exception as e:
+        print(f" ✘ SQLite columns changing failed: {e}")
+    print("\n" + "="*80)
+    print(" PIPELINE EXECUTION FINISHED")
+    print("="*80)
 if __name__ == "__main__":
     main()
