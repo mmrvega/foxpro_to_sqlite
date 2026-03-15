@@ -375,10 +375,9 @@ def main():
     # 7. Job Rank Mapping (F_DES)
     migrate_table(conn_data, conn_staging, target_table='jobRank', source_table='F_DES', mapping_dict={
         'ST_NO': 'employeeId',
-        'OLD_DES': 'jobTitleCode',
         'DES_ALL': 'title',
         'NMB': 'adminNo',
-        'D_ORD': 'AdminDate',
+        'D_ORD': 'adminDate',
         'DATE':'startDate',
         'DS': "note"
     })
@@ -395,7 +394,7 @@ def main():
     # 9. Tenure Mapping (F_SRV)
     migrate_table(conn_data, conn_staging, target_table='tenure', source_table='F_SRV', mapping_dict={
         'ST_NO': 'employeeId',
-        'ALL':'total'
+        'ALL':'totall'
     })
 
 
