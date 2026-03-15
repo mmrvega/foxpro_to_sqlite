@@ -3,6 +3,7 @@ import csv
 import os
 import sys
 import time
+import re
 from multiprocessing import Pool, cpu_count, Manager
 from dbfread import DBF, FieldParser
 
@@ -38,6 +39,8 @@ def get_system_stats():
     return ""
 
 def looks_arabic(s):
+    # Expanded range but we should be careful with U+06BA (ں) which is rare in standard Arabic
+    # and common in Mojibake from CP720
     ranges = [('\u0600', '\u06FF'), ('\u0750', '\u077F'), ('\u08A0', '\u08FF'), ('\uFB50', '\uFDFF'), ('\uFE70', '\uFEFF')]
     for ch in s:
         for a, b in ranges:
@@ -50,15 +53,25 @@ def repair_field(s):
         return s
     
     def arabic_count(x):
-        return sum(1 for ch in x if looks_arabic(ch))
+        # We value standard Arabic characters more than rare ones like ں (U+06BA)
+        score = 0
+        for ch in x:
+            if '\u0621' <= ch <= '\u064A': # Standard letters
+                score += 2
+            elif looks_arabic(ch):
+                score += 1
+        return score
 
-    orig_ar_count = arabic_count(s)
-    if orig_ar_count > 0 and orig_ar_count >= len(s) // 4:
+    orig_ar_score = arabic_count(s)
+    # Only skip if it's strongly Arabic and doesn't look like Mojibake (e.g. contains ¤, ¢, §)
+    if orig_ar_score > len(s) and not any(c in s for c in '¤¢§¬'):
         return s
 
     candidates = []
-    enc_from_list = ('cp1252', 'latin1', 'iso-8859-6', 'cp1256', 'windows-1256')
-    dec_to_list = ('cp1256', 'windows-1256', 'iso-8859-6')
+    # Add cp720 and cp850 to the mix
+    enc_from_list = ('cp1252', 'latin1', 'cp850', 'cp437', 'cp1256', 'cp720')
+    dec_to_list = ('cp1256', 'windows-1256', 'cp720', 'iso-8859-6')
+    
     for enc_from in enc_from_list:
         try:
             b = s.encode(enc_from, errors='strict')
@@ -71,50 +84,76 @@ def repair_field(s):
             except:
                 continue
     
-    try:
-        b = s.encode('cp1252', errors='replace')
-        candidates.append(b.decode('cp720', errors='replace'))
-    except:
-        pass
-
     best = s
-    best_score = (orig_ar_count, -s.count('?'))
-    for cand in candidates:
+    best_score = (orig_ar_score, -s.count('?'))
+    for cand in set(candidates):
         score = (arabic_count(cand), -cand.count('?'))
         if score > best_score:
             best_score = score
             best = cand
     return best
 
-def detect_encoding(path):
-    for enc in ('cp1256', 'cp1252', 'latin1', 'cp720', 'utf-8'):
-        try:
-            table = DBF(path, encoding=enc)
-            for i, _ in enumerate(table):
-                if i >= 10: break
-            return enc
-        except:
-            continue
-    return 'cp1256'
+CIPHER_CHARS = set('pTdOnFfePstSGa')
+CIPHER_MAP = {
+    'p': 'ع', 'T': 'ل', 'd': 'ن', 'O': 'م', 'n': 'ي',
+    'F': 'ك', 'f': 'و', 'e': 'ى', 's': 'ف', 't': 'ق',
+    'P': 'ئ', 'S': 'غ', 'G': 'ظ', 'a': 'ض',
+    '8': 'ه', 'ز': 'ر'
+}
+
+def decode_legacy_word(match):
+    w = match.group(0)
+    has_non_cipher_letter = False
+    for c in w:
+        if ('a' <= c <= 'z' or 'A' <= c <= 'Z') and c not in CIPHER_CHARS:
+            has_non_cipher_letter = True
+            break
+            
+    if has_non_cipher_letter:
+        return w
+        
+    if w.isdigit():
+        return w
+        
+    has_letter_or_arabic = any(c.isalpha() or '\u0600' <= c <= '\u06FF' for c in w)
+    
+    new_w = []
+    for c in w:
+        if c == '8' and not has_letter_or_arabic:
+            new_w.append(c)
+        elif c in CIPHER_MAP:
+            new_w.append(CIPHER_MAP[c])
+        else:
+            new_w.append(c)
+            
+    return ''.join(new_w)
+
+def apply_legacy_cipher(text):
+    if not isinstance(text, str): return text
+    return re.sub(r'\S+', decode_legacy_word, text)
 
 def worker_extract(dbf_path, status_dict):
     start_time = time.time()
     try:
         status_dict[dbf_path] = f"Initiating... {get_process_stats()}"
-        enc = detect_encoding(dbf_path)
+        # Force 'latin-1' to preserve every byte bit-perfectly for Phase 2
+        enc = 'latin-1'
         out_path = os.path.splitext(dbf_path)[0] + '.csv'
         table = DBF(dbf_path, encoding=enc, parserclass=SafeFieldParser)
         
         with open(out_path, 'w', encoding='utf-8', newline='') as f:
             writer = csv.writer(f)
             it = iter(table)
+            def clean_vals(vals):
+                return [v.replace('\x00', ' ').replace('\x1a', '') if isinstance(v, str) else v for v in vals]
+                
             try:
                 first = next(it)
                 writer.writerow(first.keys())
-                writer.writerow(first.values())
+                writer.writerow(clean_vals(first.values()))
                 count = 1
                 for record in it:
-                    writer.writerow(record.values())
+                    writer.writerow(clean_vals(record.values()))
                     count += 1
                     if count % 10000 == 0:
                          status_dict[dbf_path] = f"Extracting {count} rows... {get_process_stats()}"
@@ -146,11 +185,16 @@ def worker_fix(csv_path, status_dict):
             with open(temp_out, 'w', encoding='utf-8', newline='') as outf:
                 writer = csv.DictWriter(outf, fieldnames=fieldnames)
                 writer.writeheader()
+                is_f_cong = os.path.basename(csv_path).upper() == 'F_CONG.CSV'
                 for row in reader:
                     row_count += 1
                     for k, v in row.items():
                         if v:
-                            repaired = repair_field(v)
+                            if is_f_cong:
+                                repaired = apply_legacy_cipher(repair_field(v))
+                            else:
+                                repaired = repair_field(v)
+                            
                             if repaired != v:
                                 row[k] = repaired
                                 fixed_count += 1
@@ -231,13 +275,35 @@ def main():
         print(f" ✘ SQLite Import failed: {e}")
 
     # --- PHASE 4 ---
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print("="*80)
-    print(f" PHASE 4: CHANGING CODES WITH EXACT VALUES | {time.strftime('%H:%M:%S')}")
-    print("="*80)
     try:
         import update_all_columns
-        update_all_columns.main()
+        
+        tables = update_all_columns.get_tables()
+        if tables:
+            for t in tables: status_dict[t] = "Pending..."
+            
+            with Pool(processes=workers) as pool:
+                async_results = [pool.apply_async(update_all_columns.process_table, (t, status_dict)) for t in tables]
+                
+                while any(not r.ready() for r in async_results):
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    print("="*80)
+                    header = f" PHASE 4: DB MAPPINGS & UPDATES | {time.strftime('%H:%M:%S')}"
+                    print(header)
+                    print(get_system_stats())
+                    print("="*80)
+                    for t in tables:
+                        print(f" {t:<15} | {status_dict.get(t, 'Pending...')}")
+                    time.sleep(1)
+                
+            # Final clear for success
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print("="*80)
+            print(f" PHASE 4: COMPLETE | {time.strftime('%H:%M:%S')}")
+            print("="*80)
+            for t in tables:
+                 print(f" {t:<15} | {status_dict.get(t, 'Done')}")
+                 
     except Exception as e:
         print(f" ✘ SQLite columns changing failed: {e}")
     print("\n" + "="*80)
