@@ -35,6 +35,33 @@ def safe_val(val):
     s = str(val).strip()
     return s if s else None
 
+def ensure_column_exists(conn, table_name, col_name, col_type="TEXT"):
+    cursor = conn.cursor()
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    columns = [row[1] for row in cursor.fetchall()]
+    if col_name.lower() == 'id': return
+    if col_name not in columns:
+        logging.info(f"  Schema Auto-Fix: Adding missing column `{col_name}` to `{table_name}`")
+        cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type}")
+        conn.commit()
+
+def sync_schema(conn_src, conn_dest, table_name):
+    """Ensure destination table has all columns that source table has."""
+    c_src = conn_src.cursor()
+    c_dest = conn_dest.cursor()
+    
+    c_src.execute(f"PRAGMA table_info({table_name})")
+    src_cols = {r[1]: r[2] for r in c_src.fetchall()}
+    
+    c_dest.execute(f"PRAGMA table_info({table_name})")
+    dest_cols = {r[1]: r[2] for r in c_dest.fetchall()}
+    
+    for col, col_type in src_cols.items():
+        if col not in dest_cols:
+            logging.info(f"  Schema Sync: Adding `{col}` ({col_type}) to `{table_name}` in master.db")
+            c_dest.execute(f"ALTER TABLE {table_name} ADD COLUMN {col} {col_type}")
+    conn_dest.commit()
+
 def migrate_table(conn_data, conn_new, target_table, source_table, mapping_dict):
     logging.info(f"Step 2: Migrating data from {source_table} -> {target_table}")
     c_data = conn_data.cursor()
@@ -47,6 +74,10 @@ def migrate_table(conn_data, conn_new, target_table, source_table, mapping_dict)
         return
         
     columns = [d[0] for d in c_data.description]
+    
+    # Ensure all target columns exist in the staging DB
+    for tgt_col in mapping_dict.values():
+        ensure_column_exists(conn_new, target_table, tgt_col)
     
     # fetch target table PRAGMA to handle NOT NULL constraints
     c_new.execute(f"PRAGMA table_info({target_table})")
@@ -123,6 +154,10 @@ def migrate_table(conn_data, conn_new, target_table, source_table, mapping_dict)
 
 def batch_replace_table(conn_master, conn_staging, table_name):
     logging.info(f"Step 3: Replacing ALL records for `{table_name}` in master.db. Resetting IDs to 1.")
+    
+    # Sync schema to master first
+    sync_schema(conn_staging, conn_master, table_name)
+    
     c_master = conn_master.cursor()
     c_staging = conn_staging.cursor()
 
@@ -173,6 +208,10 @@ def batch_replace_table(conn_master, conn_staging, table_name):
 
 def compare_and_sync_table(conn_master, conn_staging, table_name, force_replace=False):
     logging.info(f"Step 3: Syncing `{table_name}` (Force Replace: {force_replace})")
+    
+    # Sync schema to master first
+    sync_schema(conn_staging, conn_master, table_name)
+    
     c_master = conn_master.cursor()
     c_staging = conn_staging.cursor()
     
