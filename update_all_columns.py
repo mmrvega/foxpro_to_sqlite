@@ -123,6 +123,7 @@ def process_table(table, status_dict=None):
             update_from_rc(cursor, "7535", "M_STATUS", table)
             update_from_rc(cursor, "754", "CONCE", table)
             update_from_rc(cursor, "756", "NE", table)
+            update_from_rc(cursor, "7570", "NAL", table)
             update_column_values(cursor, table, "SIND", {"1": "فعال", "4": "غير فعال"})
             update_column_values(cursor, table, "SEX", {"1": "ذكر", "2": "انثى"})
             update_column_values(cursor, table, "KHOM", {"1": "صباحي", "2": "مسائي"})

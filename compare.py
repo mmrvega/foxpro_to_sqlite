@@ -299,8 +299,9 @@ def main():
         'NAME': 'name',
         'DES': 'jobTitle',
         'DES3': 'jobPosition',
+        'DIV':'authority',
         'DEP': 'department',
-        'DIV': 'division',
+        'SECTION': 'division',
         'UNIT': 'unit',
         'LOC': 'location',
         'MOH': 'educationalLevel',
@@ -309,6 +310,7 @@ def main():
         'NAL': 'religion',
         'NAG': 'ethnic',
         'MATHER': 'motherName',
+        'WIFE':'wifename',
         'M_STATUS': 'status',
         'SEX': 'sex'
     })

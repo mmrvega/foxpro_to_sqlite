@@ -244,6 +244,9 @@ def main():
             for t in sorted_t:
                 print(f" {t:<15} | {status_dict[t]}")
             time.sleep(1)
+            
+    print("\nPhase 1 Complete. Sleeping 10s before Phase 2...")
+    time.sleep(10)
 
     # --- PHASE 2 ---
     csv_targets = [os.path.splitext(t)[0] + '.csv' for t in targets]
@@ -263,6 +266,9 @@ def main():
                 print(f" {c:<15} | {status_dict[c]}")
             time.sleep(1)
 
+    print("\nPhase 2 Complete. Sleeping 10s before Phase 3...")
+    time.sleep(10)
+
     # --- PHASE 3 ---
     os.system('cls' if os.name == 'nt' else 'clear')
     print("="*80)
@@ -273,6 +279,9 @@ def main():
         convert_csvs_to_sqlite.main(['--all'])
     except Exception as e:
         print(f" ✘ SQLite Import failed: {e}")
+
+    print("\nPhase 3 Complete. Sleeping 10s before Phase 4...")
+    time.sleep(10)
 
     # --- PHASE 4 ---
     try:
@@ -306,6 +315,9 @@ def main():
                  
     except Exception as e:
         print(f" ✘ SQLite columns changing failed: {e}")
+
+    print("\nPhase 4 Complete. Sleeping 10s before Phase 5...")
+    time.sleep(10)
 
     # --- PHASE 5 ---
     os.system('cls' if os.name == 'nt' else 'clear')
