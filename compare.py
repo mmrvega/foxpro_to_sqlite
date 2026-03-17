@@ -122,7 +122,7 @@ def migrate_table(conn_data, conn_new, target_table, source_table, mapping_dict)
     logging.info(f"Finished migrating {inserted} records into staging table `{target_table}`.")
 
 def batch_replace_table(conn_master, conn_staging, table_name):
-    logging.info(f"Step 3: Replacing ALL records for `{table_name}` in master.db with staging data")
+    logging.info(f"Step 3: Replacing ALL records for `{table_name}` in master.db. Resetting IDs to 1.")
     c_master = conn_master.cursor()
     c_staging = conn_staging.cursor()
 
@@ -135,21 +135,13 @@ def batch_replace_table(conn_master, conn_staging, table_name):
         logging.info(f"  No data in staging for {table_name}, skipping.")
         return
 
-    # 2. Get unique employeeIds in staging to wipe them from master
-    emp_ids = list(set(str(row[new_cols.index('employeeId')]) for row in rows if row[new_cols.index('employeeId')]))
+    # 2. Wipe the ENTIRE table in master to allow ID reset
+    c_master.execute(f"DELETE FROM {table_name}")
+    # Reset auto-increment sequence
+    c_master.execute("DELETE FROM sqlite_sequence WHERE name=?", (table_name,))
     
-    # 3. Wipe these employees from master
-    # We do chunks of 500 to avoid SQL limit on parameters
-    chunk_size = 500
-    total_deleted = 0
-    for i in range(0, len(emp_ids), chunk_size):
-        chunk = emp_ids[i:i + chunk_size]
-        placeholders = ', '.join(['?'] * len(chunk))
-        c_master.execute(f"DELETE FROM {table_name} WHERE employeeId IN ({placeholders})", chunk)
-        total_deleted += c_master.rowcount
-    
-    # 4. Insert all staging data into master
-    # Omit 'id' to let master.db generate its own auto-increment integer IDs
+    # 3. Insert all staging data into master
+    # Omit 'id' to let master.db generate its own auto-increment integer IDs starting from 1
     insert_cols = [c for c in new_cols if c.lower() != 'id']
     
     # Check master schema for any extra NOT NULL columns we need to respect
@@ -177,7 +169,7 @@ def batch_replace_table(conn_master, conn_staging, table_name):
     
     c_master.executemany(query, batch_data)
     conn_master.commit()
-    logging.info(f"  {table_name} Replace: Wiped existing records for {len(emp_ids)} employees, Inserted {len(rows)} new records.")
+    logging.info(f"  {table_name} Replace: Table wiped and refilled with {len(rows)} records. IDs reset.")
 
 def compare_and_sync_table(conn_master, conn_staging, table_name, force_replace=False):
     logging.info(f"Step 3: Syncing `{table_name}` (Force Replace: {force_replace})")
@@ -397,6 +389,14 @@ def main():
         'ALL':'totall'
     })
 
+    # 10. Annual Performance Mapping (F_REP)
+    migrate_table(conn_data, conn_staging, target_table='annualPerformance', source_table='F_REP', mapping_dict={
+        'ST_NO': 'employeeId',
+        'DATE': 'year',
+        'RE': 'rating',
+        'REDEG': 'REDEG'
+    })
+
 
     conn_data.close()
     
@@ -407,7 +407,7 @@ def main():
     compare_and_sync_table(conn_master, conn_staging, 'employees')
     
     # For historical tables: Use Batch Replace (wipe and refill as per user request)
-    for tbl in ['committee', 'academicCertificate', 'trainingCourse', 'lettersOfAppreciation', 'research', 'jobRank', 'jobPosition', 'tenure']:
+    for tbl in ['committee', 'academicCertificate', 'trainingCourse', 'lettersOfAppreciation', 'research', 'jobRank', 'jobPosition', 'tenure', 'annualPerformance']:
         batch_replace_table(conn_master, conn_staging, tbl)
         
     conn_master.close()

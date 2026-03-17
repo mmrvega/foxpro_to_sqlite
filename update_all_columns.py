@@ -163,7 +163,7 @@ def process_table(table, status_dict=None):
             update_column_values(cursor, table, "TKEEM", {"1": "أمتياز", "2": "جيد جدا", "3": "جيد", "4": "متوسط", "5": "مقبول", "6": "ضعيف"})
         
         elif table == "F_MSOL":
-            update_from_msol(cursor, "CODE", table)
+            update_from_msol(cursor, "DES_ALL", table)
         conn.commit()
         conn.close()
         if status_dict: status_dict[table] = "✔ Finished"
