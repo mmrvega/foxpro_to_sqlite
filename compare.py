@@ -346,10 +346,11 @@ def main():
         'MOH': 'educationalLevel',
         'IKTE': 'fieldOfStudy',
         'B_PLASE': 'address',
-        'NAL': 'religion',
+        'ORG': 'religion',
         'NAG': 'ethnic',
         'MATHER': 'motherName',
-        'WIFE':'wifename',
+        'WIFE':'wife_name',
+        'HOS':'home_location',
         'M_STATUS': 'status',
         'SEX': 'sex'
     })
