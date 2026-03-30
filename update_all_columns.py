@@ -2,7 +2,6 @@ import sqlite3
 import os
 import time
 import logging
-from multiprocessing import Pool, cpu_count
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -11,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 DB_PATH = 'data_all.db'
 
 def get_db_connection(retries=5):
-    """Create a connection with a long timeout and retry mechanism."""
+    """Create a connection with a long timeout and retry mechanism (Single Process Safe)."""
     for i in range(retries):
         try:
             conn = sqlite3.connect(DB_PATH, timeout=120)
@@ -26,10 +25,9 @@ def get_db_connection(retries=5):
     return sqlite3.connect(DB_PATH, timeout=120)
 
 def update_column_values(cursor, table_name, column_name, mapping_dict):
-    """Update values using a CASE statement based on a simple dictionary."""
+    """Update values using a CASE statement and log successes."""
     if not mapping_dict: return
     try:
-        # Build the WHEN clauses from the dictionary
         case_clauses = " ".join([
             f"WHEN TRIM({column_name}) = '{k}' THEN '{v}'" 
             for k, v in mapping_dict.items()
@@ -45,12 +43,12 @@ def update_column_values(cursor, table_name, column_name, mapping_dict):
         """
         cursor.execute(sql)
         if cursor.rowcount > 0:
-            logging.info(f"  [{table_name}] Updated {column_name} (rows: {cursor.rowcount})")
+            logging.info(f"  [{table_name}] Success: Updated {column_name} ({cursor.rowcount} rows) using literal mapping.")
     except Exception as e:
         logging.error(f"  [{table_name}] Error updating {column_name}: {e}")
 
 def update_from_rc(cursor, prefix, column_name, table_name):
-    """Update column values by stripping a prefix from RC table codes."""
+    """Update column values by stripping a prefix from RC table and log count."""
     try:
         cursor.execute("SELECT CODE, [DESC] FROM RC WHERE CODE LIKE ?", (f"{prefix}%",))
         rows = cursor.fetchall()
@@ -61,9 +59,9 @@ def update_from_rc(cursor, prefix, column_name, table_name):
                 suffix = code[prefix_len:]
                 mapping[suffix] = desc
         
-        if not mapping: return 0
+        if not mapping: 
+            return 0
         
-        # Build batch update using executemany for efficiency
         update_data = [(v, k) for k, v in mapping.items()]
         cursor.executemany(
             f"UPDATE {table_name} SET {column_name} = ? WHERE TRIM({column_name}) = ?", 
@@ -71,14 +69,14 @@ def update_from_rc(cursor, prefix, column_name, table_name):
         )
         
         if cursor.rowcount > 0:
-            logging.info(f"  [{table_name}] Updated {column_name} via RC prefix {prefix}")
+            logging.info(f"  [{table_name}] Success: Updated {column_name} ({cursor.rowcount} rows) via RC prefix '{prefix}'.")
         return cursor.rowcount
     except Exception as e:
         logging.error(f"  [{table_name}] Error in update_from_rc for {column_name}: {e}")
         return 0
 
 def update_from_msol(cursor, column_name, table_name):
-    """Update column values using descriptions from the MSOL table."""
+    """Update column values using descriptions from MSOL and log count."""
     try:
         cursor.execute("SELECT CODE, [DESC] FROM MSOL")
         mapping = {str(code).strip(): str(desc).strip() for code, desc in cursor.fetchall() if code}
@@ -91,51 +89,45 @@ def update_from_msol(cursor, column_name, table_name):
         )
         
         if cursor.rowcount > 0:
-            logging.info(f"  [{table_name}] Updated {column_name} from MSOL")
+            logging.info(f"  [{table_name}] Success: Updated {column_name} ({cursor.rowcount} rows) from MSOL.")
         return cursor.rowcount
     except Exception as e:
         logging.error(f"  [{table_name}] Error in update_from_msol for {column_name}: {e}")
         return 0
 
 def process_table(table, status_dict=None):
-    """Worker function to process a single table."""
+    """Worker function to process a single table sequentially with full logging."""
     try:
-        logging.info(f"Starting processing for table: {table}")
+        start_time = time.time()
+        logging.info(f"--- Processing {table} ---")
         if status_dict: status_dict[table] = "Processing mappings..."
+        
         conn = get_db_connection()
         cursor = conn.cursor()
         conn.execute("BEGIN TRANSACTION")
         
         if table == "FILE_ALL":
-            update_from_rc(cursor, "44", "SECTION", table)
-            update_from_rc(cursor, "3", "DES", table)
-            update_from_rc(cursor, "3", "DES2", table)
-            update_from_rc(cursor, "5", "OLD_DES", table)
-            update_from_rc(cursor, "45", "UNIT", table)
-            update_from_rc(cursor, "210", "LOC", table)
-            update_from_rc(cursor, "130", "DEP", table)
-            update_from_rc(cursor, "0210", "DIV", table)
-            update_from_rc(cursor, "65", "UNV", table)
-            update_from_rc(cursor, "66", "COL", table)
-            update_from_rc(cursor, "677", "MOH", table)
-            update_from_rc(cursor, "7", "IKTE", table)
-            update_from_rc(cursor, "757", "NAG", table)
-            update_from_rc(cursor, "7535", "M_STATUS", table)
-            update_from_rc(cursor, "754", "CONCE", table)
-           # update_from_rc(cursor, "756", "NE", table)
-            update_from_rc(cursor, "7520", "ORG", table)
+            rc_mappings = [
+                ("44", "SECTION"), ("3", "DES"), ("3", "DES2"), ("5", "OLD_DES"),
+                ("45", "UNIT"), ("210", "LOC"), ("130", "DEP"), ("0210", "DIV"),
+                ("65", "UNV"), ("66", "COL"), ("677", "MOH"), ("7", "IKTE"),
+                ("757", "NAG"), ("7535", "M_STATUS"), ("754", "CONCE"), ("7520", "ORG")
+            ]
+            for prefix, col in rc_mappings:
+                update_from_rc(cursor, prefix, col, table)
+            
             update_column_values(cursor, table, "SIND", {"1": "فعال", "4": "غير فعال"})
             update_column_values(cursor, table, "SEX", {"1": "ذكر", "2": "انثى"})
             update_column_values(cursor, table, "KHOM", {"1": "صباحي", "2": "مسائي"})
             update_column_values(cursor, table, "DG2", {"1": "أمومة", "2": "أجازة طويلة"})
             update_from_msol(cursor, "DES3", table)
             cursor.execute(f"UPDATE {table} SET DES3 = 'بدون منصب' WHERE DES3 IS NULL OR TRIM(DES3) = ''")
+            if cursor.rowcount > 0:
+                logging.info(f"  [{table}] Handled {cursor.rowcount} empty DES3 records.")
         
         elif table == "F_SHHD":
-            update_from_rc(cursor, "65", "UNV", table)
-            update_from_rc(cursor, "66", "COL", table)
-            update_from_rc(cursor, "677", "MOH", table)
-            update_from_rc(cursor, "7", "IKTE", table)
+            for prefix, col in [("65", "UNV"), ("66", "COL"), ("677", "MOH"), ("7", "IKTE")]:
+                update_from_rc(cursor, prefix, col, table)
             
         elif table == "F_DES":
             update_from_rc(cursor, "3", "OLD_DES", table)
@@ -165,10 +157,13 @@ def process_table(table, status_dict=None):
         
         elif table == "F_MSOL":
             update_from_msol(cursor, "DES_ALL", table)
+            
         conn.commit()
         conn.close()
+        
+        elapsed = time.time() - start_time
         if status_dict: status_dict[table] = "✔ Finished"
-        logging.info(f"Finished processing for table: {table}")
+        logging.info(f"--- Finished {table} in {elapsed:.2f}s ---")
         return True
     except Exception as e:
         logging.error(f"Error processing table {table}: {e}")
@@ -176,8 +171,7 @@ def process_table(table, status_dict=None):
         return False
 
 def get_tables():
-    if not os.path.exists(DB_PATH):
-        return []
+    if not os.path.exists(DB_PATH): return []
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -189,12 +183,12 @@ def get_tables():
         return []
 
 def main():
-    logging.info("Starting update_all_columns.py process")
+    logging.info("Starting update_all_columns.py process (Single-Process Mode)")
     tables = get_tables()
     if not tables:
         logging.warning("No tables found to process.")
         return
-    logging.info(f"Found {len(tables)} tables to process.")
+    logging.info(f"Found {len(tables)} tables to process sequentially.")
     for table in tables:
         process_table(table)
     logging.info("update_all_columns.py process completed.")
