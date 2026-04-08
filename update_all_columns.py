@@ -157,6 +157,7 @@ def process_table(table, status_dict=None):
         
         elif table == "F_MSOL":
             update_from_msol(cursor, "DES_ALL", table)
+            update_from_rc(cursor, "", "DES_ALL", table)
             
         conn.commit()
         conn.close()
