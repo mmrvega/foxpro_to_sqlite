@@ -78,28 +78,48 @@ def create_sqlite_from_xlsx(xlsx_file_path, db_name):
                 clean_headers.append(clean_h)
             
             # إنشاء اسم الجدول من اسم ورقة العمل
-            table_name = sheet_name.strip().replace(' ', '_').replace('-', '_')
-            if not table_name or table_name[0].isdigit():
-                table_name = f"Sheet_{table_name}"
+            table_name = "company_phones"  # استخدام اسم الجدول بالإنجليزية
             
-            # إنشاء الجدول
-            cols_query = ", ".join([f'"{name}" TEXT' for name in clean_headers])
+            # إنشاء الجدول بالهيكل المحدد
             cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
-            cursor.execute(f"CREATE TABLE {table_name} ({cols_query})")
+            cursor.execute(f"""
+                CREATE TABLE {table_name} (
+                    office_company      TEXT,
+                    house_company       TEXT,
+                    offices_civil       TEXT,
+                    house_civil         TEXT,
+                    name_address        TEXT,
+                    department_division TEXT,
+                    note                TEXT
+                )
+            """)
             
-            # إدراج البيانات
-            insert_query = f"INSERT INTO {table_name} VALUES ({', '.join(['?' for _ in clean_headers])})"
-            
+            # إدراج البيانات مع التنظيف
             count = 0
             for row in rows[1:]:
                 if any(row):  # تأكد من أن الصف ليس فارغاً
                     # تحويل جميع القيم إلى نصوص
                     row_data = [str(cell) if cell is not None else "" for cell in row]
-                    cursor.execute(insert_query, row_data)
+                    
+                    # تخطي العمود الأول (number) واستخدام الأعمدة من 2 إلى 8
+                    row_data = row_data[1:8]  # تخطي العمود الأول
+                    
+                    # إذا كان عدد الأعمدة أقل من 7، أضف أعمدة فارغة
+                    while len(row_data) < 7:
+                        row_data.append("")
+                    
+                    # اقتصاص على 7 أعمدة فقط
+                    row_data = row_data[:7]
+                    
+                    cursor.execute(f"""
+                        INSERT INTO {table_name} 
+                        (office_company, house_company, offices_civil, house_civil, name_address, department_division, note) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, row_data)
                     count += 1
             
             conn.commit()
-            print(f"   ✅ تم إنشاء جدول: {table_name} ({count} سجل)")
+            print(f"   ✅ تم إنشاء جدول: {table_name} ({count} سجل بعد التنظيف)")
         
         conn.close()
         print(f"✅ تم إنشاء قاعدة البيانات: {db_name}")
@@ -118,8 +138,8 @@ def convert_all_xlsx_to_sqlite(directory="."):
     print(f"🔍 تم العثور على {len(xlsx_files)} ملف XLSX")
     
     for xlsx_file in xlsx_files:
-        # إنشاء اسم قاعدة البيانات من اسم الملف
-        db_name = xlsx_file.stem + ".db"
+        # استخدام اسم قاعدة البيانات بالإنجليزية
+        db_name = "company_phones.db"
         db_path = xlsx_file.parent / db_name
         
         create_sqlite_from_xlsx(str(xlsx_file), str(db_path))
