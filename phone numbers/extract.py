@@ -4,6 +4,14 @@ import os
 import openpyxl
 from pathlib import Path
 
+
+def clean_text(value):
+    if value is None:
+        return ""
+    text = str(value).replace('ـ', '')
+    return text.strip()
+
+
 def create_sqlite_from_csv(csv_file_path, db_name, table_name):
     # 1. الاتصال بقاعدة البيانات (سيتم إنشاؤها إذا لم تكن موجودة)
     conn = sqlite3.connect(db_name)
@@ -68,13 +76,14 @@ def create_sqlite_from_xlsx(xlsx_file_path, db_name):
             if not rows:
                 continue
             
-            headers = [str(h) if h else "column_unknown" for h in rows[0]]
+            headers = [clean_text(h) if h else "column_unknown" for h in rows[0]]
             
             # تنظيف أسماء الأعمدة
             clean_headers = []
             for h in headers:
-                clean_h = h.strip().replace('/', '_').replace(' ', '_').replace(';', '_')
-                if not clean_h: clean_h = "column_unknown"
+                clean_h = h.replace('/', '_').replace(' ', '_').replace(';', '_')
+                if not clean_h:
+                    clean_h = "column_unknown"
                 clean_headers.append(clean_h)
             
             # إنشاء اسم الجدول من اسم ورقة العمل
@@ -98,8 +107,8 @@ def create_sqlite_from_xlsx(xlsx_file_path, db_name):
             count = 0
             for row in rows[1:]:
                 if any(row):  # تأكد من أن الصف ليس فارغاً
-                    # تحويل جميع القيم إلى نصوص
-                    row_data = [str(cell) if cell is not None else "" for cell in row]
+                    # تحويل جميع القيم إلى نصوص وإزالة tatweel
+                    row_data = [clean_text(cell) for cell in row]
                     
                     # تخطي العمود الأول (number) واستخدام الأعمدة من 2 إلى 8
                     row_data = row_data[1:8]  # تخطي العمود الأول
