@@ -13,48 +13,48 @@ def clean_text(value):
 
 
 def create_sqlite_from_csv(csv_file_path, db_name, table_name):
-    # 1. الاتصال بقاعدة البيانات (سيتم إنشاؤها إذا لم تكن موجودة)
+    # 1. Connect to database (will be created if it doesn't exist)
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
 
     try:
-        # 2. فتح ملف CSV مع تحديد الترميز الصحيح للعربية والفاصلة المنقوطة
+        # 2. Open CSV file with correct encoding for Arabic and semicolon delimiter
         with open(csv_file_path, mode='r', encoding='utf-8-sig') as f:
-            # نحدد delimiter=';' لأن الإكسل العربي يستخدمها
+            # Specify delimiter=';' because Arabic Excel uses it
             reader = csv.reader(f, delimiter=';')
             
-            # قراءة الصف الأول (العناوين)
+            # Read first row (headers)
             headers = next(reader)
             
-            # 3. تنظيف أسماء الأعمدة (إزالة المسافات والرموز لتكون متوافقة مع SQL)
+            # 3. Clean column names (remove spaces and symbols to be SQL compatible)
             clean_headers = []
             for h in headers:
                 clean_h = h.strip().replace('/', '_').replace(' ', '_').replace(';', '_')
                 if not clean_h: clean_h = "column_unknown"
                 clean_headers.append(clean_h)
 
-            # 4. إنشاء جدول بناءً على الأسماء المنظفة
-            # سنفترض أن كل الأعمدة نصوص (TEXT) للتبسيط
+            # 4. Create table based on cleaned names
+            # Assume all columns are TEXT for simplicity
             cols_query = ", ".join([f'"{name}" TEXT' for name in clean_headers])
             cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
             cursor.execute(f"CREATE TABLE {table_name} ({cols_query})")
 
-            # 5. إدخال البيانات
+            # 5. Insert data
             insert_query = f"INSERT INTO {table_name} VALUES ({', '.join(['?' for _ in clean_headers])})"
             
             count = 0
             for row in reader:
-                if any(row):  # التأكد من أن السطر ليس فارغاً
+                if any(row):  # Ensure row is not empty
                     cursor.execute(insert_query, row)
                     count += 1
 
             conn.commit()
-            print(f"✅ تم بنجاح! تم إنشاء القاعدة: {db_name}")
-            print(f"✅ تم استيراد {count} سجل إلى الجدول: {table_name}")
-            print(f"✅ أسماء الأعمدة الجديدة: {', '.join(clean_headers)}")
+            print(f"✅ Success! Database created: {db_name}")
+            print(f"✅ Imported {count} records to table: {table_name}")
+            print(f"✅ New column names: {', '.join(clean_headers)}")
 
     except Exception as e:
-        print(f"❌ حدث خطأ: {e}")
+        print(f"❌ Error: {e}")
     finally:
         conn.close()
 
@@ -97,13 +97,15 @@ def create_sqlite_from_xlsx(xlsx_file_path, db_name):
                     house_company       TEXT,
                     offices_civil       TEXT,
                     house_civil         TEXT,
-                    name_address        TEXT,
-                    department_division TEXT,
+                    division_name       TEXT,
+                    address             TEXT,
+                    authority           TEXT,
+                    department          TEXT,
                     note                TEXT
                 )
             """)
             
-            # إدراج البيانات مع التنظيف
+            # إدراج البيانات مع التنظيف والفصل
             count = 0
             for row in rows[1:]:
                 if any(row):  # تأكد من أن الصف ليس فارغاً
@@ -120,11 +122,38 @@ def create_sqlite_from_xlsx(xlsx_file_path, db_name):
                     # اقتصاص على 7 أعمدة فقط
                     row_data = row_data[:7]
                     
+                    # استخراج جميع الأعمدة
+                    office_company = row_data[0]
+                    house_company = row_data[1]
+                    offices_civil = row_data[2]
+                    house_civil = row_data[3]
+                    name_address = row_data[4]
+                    department_division = row_data[5]
+                    note = row_data[6]
+                    
+                    # فصل name_address على "/"
+                    if '/' in name_address:
+                        division_name, address = name_address.split('/', 1)
+                        division_name = division_name.strip()
+                        address = address.strip()
+                    else:
+                        division_name = name_address
+                        address = ""
+                    
+                    # فصل department_division على "/"
+                    if '/' in department_division:
+                        authority, department = department_division.split('/', 1)
+                        authority = authority.strip()
+                        department = department.strip()
+                    else:
+                        authority = department_division
+                        department = ""
+                    
                     cursor.execute(f"""
                         INSERT INTO {table_name} 
-                        (office_company, house_company, offices_civil, house_civil, name_address, department_division, note) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """, row_data)
+                        (office_company, house_company, offices_civil, house_civil, division_name, address, authority, department, note) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (office_company, house_company, offices_civil, house_civil, division_name, address, authority, department, note))
                     count += 1
             
             conn.commit()
