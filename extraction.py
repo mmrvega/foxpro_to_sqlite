@@ -316,21 +316,6 @@ def main():
     except Exception as e:
         print(f" ✘ SQLite columns changing failed: {e}")
 
-    print("\nPhase 4 Complete. Sleeping 10s before Phase 5...")
-    time.sleep(10)
-
-    # --- PHASE 5 ---
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print("="*80)
-    print(f" PHASE 5: SYNC TO MASTER | {time.strftime('%H:%M:%S')}")
-    print("="*80)
-    try:
-        import compare
-        compare.main()
-        print(f" ✔ Phase 5 COMPLETE")
-    except Exception as e:
-        print(f" ✘ Master Sync failed: {e}")
-
     print("\n" + "="*80)
     print(" PIPELINE EXECUTION FINISHED")
     print("="*80)
