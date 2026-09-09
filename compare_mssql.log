@@ -1,0 +1,289 @@
+2026-09-09 08:50:50.599 - INFO - ==========================================================================================
+2026-09-09 08:50:50.600 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 08:50:50.608 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 08:50:50.608 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 08:50:50.608 - INFO - Opening source SQLite database...
+2026-09-09 08:50:50.611 - INFO - Source SQLite connection opened
+2026-09-09 08:50:50.612 - INFO - Opening SQL Server connection...
+2026-09-09 08:50:50.671 - INFO - SQL Server connection opened in 0.06 seconds
+2026-09-09 08:50:50.671 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 08:50:50.709 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 08:50:50.710 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 08:50:50.710 - INFO - Reading existing employees from dbo.employees
+2026-09-09 08:50:51.067 - INFO - Loaded 25698 existing employee rows from MSSQL
+2026-09-09 08:50:51.350 - INFO - dbo.employees: inserting final batch of 1 rows (total so far: 0)
+2026-09-09 08:50:51.375 - INFO - Comparing source F_CONG -> target dbo.committee
+2026-09-09 08:50:51.404 - INFO - Target table dbo.committee: 12 columns (id, employeeId, title, adminNo, adminDate, startDate, endDate, CSIDE, isdeleted, user_edit, edit_time, who_edited_user)
+2026-09-09 08:50:51.511 - INFO - F_CONG: loaded 37649 source rows
+2026-09-09 08:51:47.464 - INFO - Source SQLite connection closed
+2026-09-09 08:51:47.503 - INFO - SQL Server connection closed
+2026-09-09 08:52:40.736 - INFO - ==========================================================================================
+2026-09-09 08:52:40.736 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 08:52:40.743 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 08:52:40.743 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 08:52:40.743 - INFO - Opening source SQLite database...
+2026-09-09 08:52:40.744 - INFO - Source SQLite connection opened
+2026-09-09 08:52:40.744 - INFO - Opening SQL Server connection...
+2026-09-09 08:52:40.784 - INFO - SQL Server connection opened in 0.04 seconds
+2026-09-09 08:52:40.785 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 08:52:40.817 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 08:52:40.818 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 08:52:40.818 - INFO - Reading existing employees from dbo.employees
+2026-09-09 08:52:41.144 - INFO - Loaded 25698 existing employee rows from MSSQL
+2026-09-09 08:52:41.373 - INFO - dbo.employees: inserting final batch of 1 rows (total so far: 0)
+2026-09-09 08:52:41.398 - INFO - Comparing source F_CONG -> target dbo.committee
+2026-09-09 08:52:41.399 - INFO - Target table dbo.committee: 12 columns (id, employeeId, title, adminNo, adminDate, startDate, endDate, CSIDE, isdeleted, user_edit, edit_time, who_edited_user)
+2026-09-09 08:52:41.499 - INFO - F_CONG: loaded 37649 source rows
+2026-09-09 08:54:48.862 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 0)
+2026-09-09 08:54:48.880 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 1000)
+2026-09-09 08:54:48.897 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 2000)
+2026-09-09 08:54:48.911 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 3000)
+2026-09-09 08:54:48.930 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 4000)
+2026-09-09 08:54:48.945 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 5000)
+2026-09-09 08:54:48.965 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 6000)
+2026-09-09 08:54:48.979 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 7000)
+2026-09-09 08:54:48.993 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 8000)
+2026-09-09 08:54:49.008 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 9000)
+2026-09-09 08:54:49.022 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 10000)
+2026-09-09 08:54:49.038 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 11000)
+2026-09-09 08:54:49.053 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 12000)
+2026-09-09 08:54:49.066 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 13000)
+2026-09-09 08:54:49.080 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 14000)
+2026-09-09 08:54:49.096 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 15000)
+2026-09-09 08:54:49.110 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 16000)
+2026-09-09 08:54:49.127 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 17000)
+2026-09-09 08:54:49.142 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 18000)
+2026-09-09 08:54:49.158 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 19000)
+2026-09-09 08:54:49.174 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 20000)
+2026-09-09 08:54:49.192 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 21000)
+2026-09-09 08:54:49.207 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 22000)
+2026-09-09 08:54:49.221 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 23000)
+2026-09-09 08:54:49.234 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 24000)
+2026-09-09 08:54:49.259 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 25000)
+2026-09-09 08:54:49.288 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 26000)
+2026-09-09 08:54:49.303 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 27000)
+2026-09-09 08:54:49.319 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 28000)
+2026-09-09 08:54:49.334 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 29000)
+2026-09-09 08:54:49.349 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 30000)
+2026-09-09 08:54:49.364 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 31000)
+2026-09-09 08:54:49.378 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 32000)
+2026-09-09 08:54:49.393 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 33000)
+2026-09-09 08:54:49.409 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 34000)
+2026-09-09 08:54:49.424 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 35000)
+2026-09-09 08:54:49.439 - INFO - dbo.committee: inserting batch of 1000 rows (total so far: 36000)
+2026-09-09 08:54:49.453 - INFO - dbo.committee: inserting final batch of 612 rows (total so far: 37000)
+2026-09-09 08:54:49.546 - INFO - dbo.committee: compared source=37649 with MSSQL=37649; unchanged=37, deleted=37612, inserted=37612
+2026-09-09 08:54:49.555 - INFO - Comparing source F_SHHD -> target dbo.academicCertificate
+2026-09-09 08:54:49.580 - INFO - Target table dbo.academicCertificate: 11 columns (id, employeeId, university, collage, educationLevel, specialization, year, isdeleted, user_edit, edit_time, who_edited_user)
+2026-09-09 08:54:49.642 - INFO - F_SHHD: loaded 28856 source rows
+2026-09-09 08:54:49.859 - INFO - dbo.academicCertificate: compared source=28856 with MSSQL=28856; unchanged=28856, deleted=0, inserted=0
+2026-09-09 08:54:49.866 - INFO - Comparing source F_TRAINI -> target dbo.trainingCourse
+2026-09-09 08:54:49.892 - INFO - Target table dbo.trainingCourse: 12 columns (id, employeeId, courseType, evaluation, title, startDate, endDate, location, isdeleted, user_edit, edit_time, who_edited_user)
+2026-09-09 08:54:50.500 - INFO - F_TRAINI: loaded 206935 source rows
+2026-09-09 09:02:02.725 - INFO - Source SQLite connection closed
+2026-09-09 09:02:03.010 - INFO - SQL Server connection closed
+2026-09-09 09:02:12.164 - INFO - ==========================================================================================
+2026-09-09 09:02:12.164 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 09:02:12.170 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 09:02:12.171 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 09:02:12.171 - INFO - Opening source SQLite database...
+2026-09-09 09:02:12.171 - INFO - Source SQLite connection opened
+2026-09-09 09:02:12.171 - INFO - Opening SQL Server connection...
+2026-09-09 09:02:12.215 - INFO - SQL Server connection opened in 0.04 seconds
+2026-09-09 09:02:12.216 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 09:02:12.244 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 09:02:12.245 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 09:02:12.245 - INFO - Reading existing employees from dbo.employees
+2026-09-09 09:02:12.633 - INFO - Loaded 25698 existing employee rows from MSSQL
+2026-09-09 09:02:12.909 - INFO - dbo.employees: inserting final batch of 1 rows (total so far: 0)
+2026-09-09 09:02:12.937 - INFO - Committing employee transaction before starting worker processes...
+2026-09-09 09:02:12.939 - INFO - Starting 9 worker processes for 9 historical tables
+2026-09-09 09:02:13.890 - INFO - Worker completed dbo.academicCertificate: {'source': 28856, 'unchanged': 28856, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:02:14.023 - INFO - Worker completed dbo.tenure: {'source': 23628, 'unchanged': 23628, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:02:26.510 - INFO - Worker completed dbo.research: {'source': 2511, 'unchanged': 8, 'deleted': 2503, 'inserted': 2503}
+2026-09-09 09:03:00.885 - INFO - Worker completed dbo.jobPosition: {'source': 9613, 'unchanged': 0, 'deleted': 9613, 'inserted': 9613}
+2026-09-09 09:05:27.338 - INFO - ==========================================================================================
+2026-09-09 09:05:27.338 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 09:05:27.349 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 09:05:27.349 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 09:05:27.349 - INFO - Opening source SQLite database...
+2026-09-09 09:05:27.349 - INFO - Source SQLite connection opened
+2026-09-09 09:05:27.349 - INFO - Opening SQL Server connection...
+2026-09-09 09:05:27.406 - INFO - SQL Server connection opened in 0.06 seconds
+2026-09-09 09:05:27.407 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 09:05:27.442 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 09:05:27.443 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 09:05:27.443 - INFO - Reading existing employees from dbo.employees
+2026-09-09 09:05:27.776 - INFO - Loaded 25699 existing employee rows from MSSQL
+2026-09-09 09:05:28.300 - INFO - Committing employee transaction before starting worker processes...
+2026-09-09 09:05:28.301 - INFO - Starting 8 worker processes for 9 historical tables
+2026-09-09 09:05:28.818 - INFO - Worker completed dbo.tenure: {'source': 23628, 'unchanged': 23628, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:05:29.258 - INFO - Worker completed dbo.academicCertificate: {'source': 28856, 'unchanged': 28856, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:05:33.778 - INFO - Worker completed dbo.research: {'source': 2511, 'unchanged': 8, 'deleted': 2503, 'inserted': 2503}
+2026-09-09 09:05:54.823 - INFO - Worker completed dbo.jobPosition: {'source': 9613, 'unchanged': 0, 'deleted': 9613, 'inserted': 9613}
+2026-09-09 09:06:28.551 - INFO - ==========================================================================================
+2026-09-09 09:06:28.551 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 09:06:28.558 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 09:06:28.558 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 09:06:28.558 - INFO - Opening source SQLite database...
+2026-09-09 09:06:28.558 - INFO - Source SQLite connection opened
+2026-09-09 09:06:28.558 - INFO - Opening SQL Server connection...
+2026-09-09 09:06:28.581 - INFO - SQL Server connection opened in 0.02 seconds
+2026-09-09 09:06:28.582 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 09:06:28.583 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 09:06:28.583 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 09:06:28.583 - INFO - Reading existing employees from dbo.employees
+2026-09-09 09:06:28.971 - INFO - Loaded 25698 existing employee rows from MSSQL
+2026-09-09 09:06:29.217 - INFO - dbo.employees: inserting final batch of 1 rows (total so far: 0)
+2026-09-09 09:06:29.243 - INFO - Committing employee transaction before starting worker processes...
+2026-09-09 09:06:29.245 - INFO - Starting 8 worker processes for 9 historical tables
+2026-09-09 09:06:29.827 - INFO - Worker completed dbo.tenure: {'source': 23628, 'unchanged': 23628, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:06:30.039 - INFO - Worker completed dbo.academicCertificate: {'source': 28856, 'unchanged': 28856, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:06:33.923 - INFO - Worker completed dbo.research: {'source': 2511, 'unchanged': 8, 'deleted': 2503, 'inserted': 2503}
+2026-09-09 09:06:58.732 - INFO - Worker completed dbo.jobPosition: {'source': 9613, 'unchanged': 0, 'deleted': 9613, 'inserted': 9613}
+2026-09-09 09:11:27.647 - INFO - ==========================================================================================
+2026-09-09 09:11:27.647 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 09:11:27.655 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 09:11:27.658 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 09:11:27.662 - INFO - Opening source SQLite database...
+2026-09-09 09:11:27.665 - INFO - Source SQLite connection opened
+2026-09-09 09:11:27.666 - INFO - Opening SQL Server connection...
+2026-09-09 09:11:27.724 - INFO - SQL Server connection opened in 0.06 seconds
+2026-09-09 09:11:27.726 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 09:11:27.752 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 09:11:27.767 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 09:11:27.774 - INFO - Reading existing employees from dbo.employees
+2026-09-09 09:11:28.103 - INFO - Loaded 25699 existing employee rows from MSSQL
+2026-09-09 09:11:28.399 - INFO - Committing employee transaction before starting worker processes...
+2026-09-09 09:11:28.401 - INFO - Starting 8 worker processes for 9 historical tables
+2026-09-09 09:11:28.894 - INFO - Worker completed dbo.tenure: {'source': 23628, 'unchanged': 23628, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:11:29.581 - INFO - Worker completed dbo.academicCertificate: {'source': 28856, 'unchanged': 28856, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:11:32.851 - INFO - Worker completed dbo.research: {'source': 2511, 'unchanged': 8, 'deleted': 2503, 'inserted': 2503}
+2026-09-09 09:12:24.118 - INFO - Worker completed dbo.jobPosition: {'source': 9613, 'unchanged': 0, 'deleted': 9613, 'inserted': 9613}
+2026-09-09 09:16:32.096 - INFO - ==========================================================================================
+2026-09-09 09:16:32.097 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 09:16:32.104 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 09:16:32.105 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 09:16:32.105 - INFO - Opening source SQLite database...
+2026-09-09 09:16:32.106 - INFO - Source SQLite connection opened
+2026-09-09 09:16:32.107 - INFO - Opening SQL Server connection...
+2026-09-09 09:16:32.153 - INFO - SQL Server connection opened in 0.05 seconds
+2026-09-09 09:16:32.154 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 09:16:32.189 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 09:16:32.190 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 09:16:32.190 - INFO - Reading existing employees from dbo.employees
+2026-09-09 09:16:32.520 - INFO - Loaded 25699 existing employee rows from MSSQL
+2026-09-09 09:16:32.766 - INFO - Committing employee transaction before starting worker processes...
+2026-09-09 09:16:32.769 - INFO - Checkpointed 0 changes after 1 completed tables to C:\Users\mmrma\Desktop\foxpro2\compare_mssql_changes.json
+2026-09-09 09:16:32.771 - INFO - Starting 8 worker processes for 9 historical tables
+2026-09-09 09:16:33.307 - INFO - Checkpointed 0 changes after 2 completed tables to C:\Users\mmrma\Desktop\foxpro2\compare_mssql_changes.json
+2026-09-09 09:16:33.310 - INFO - Worker completed dbo.tenure: {'source': 23628, 'unchanged': 23628, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:16:33.569 - INFO - Checkpointed 0 changes after 3 completed tables to C:\Users\mmrma\Desktop\foxpro2\compare_mssql_changes.json
+2026-09-09 09:16:33.570 - INFO - Worker completed dbo.academicCertificate: {'source': 28856, 'unchanged': 28856, 'deleted': 0, 'inserted': 0}
+2026-09-09 09:16:40.026 - INFO - Checkpointed 5006 changes after 4 completed tables to C:\Users\mmrma\Desktop\foxpro2\compare_mssql_changes.json
+2026-09-09 09:16:40.027 - INFO - Worker completed dbo.research: {'source': 2511, 'unchanged': 8, 'deleted': 2503, 'inserted': 2503}
+2026-09-09 09:17:07.023 - INFO - Checkpointed 24232 changes after 5 completed tables to C:\Users\mmrma\Desktop\foxpro2\compare_mssql_changes.json
+2026-09-09 09:17:07.023 - INFO - Worker completed dbo.jobPosition: {'source': 9613, 'unchanged': 0, 'deleted': 9613, 'inserted': 9613}
+2026-09-09 09:32:31.404 - INFO - ==========================================================================================
+2026-09-09 09:32:31.405 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 09:32:31.412 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 09:32:31.414 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 09:32:31.414 - INFO - Opening source SQLite database...
+2026-09-09 09:32:31.415 - INFO - Source SQLite connection opened
+2026-09-09 09:32:31.415 - INFO - Opening SQL Server connection...
+2026-09-09 09:32:31.449 - INFO - SQL Server connection opened in 0.03 seconds
+2026-09-09 09:32:31.454 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 09:32:31.481 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 09:32:31.482 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 09:32:31.483 - INFO - Reading existing employees from dbo.employees
+2026-09-09 09:32:31.809 - INFO - Loaded 25699 existing employee rows from MSSQL
+2026-09-09 09:32:31.857 - INFO - employees: processed 1000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:31.874 - INFO - employees: processed 2000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:31.890 - INFO - employees: processed 3000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:31.907 - INFO - employees: processed 4000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:31.936 - INFO - employees: processed 5000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:31.952 - INFO - employees: processed 6000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:31.968 - INFO - employees: processed 7000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:31.984 - INFO - employees: processed 8000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.001 - INFO - employees: processed 9000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.017 - INFO - employees: processed 10000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.033 - INFO - employees: processed 11000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.049 - INFO - employees: processed 12000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.064 - INFO - employees: processed 13000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.080 - INFO - employees: processed 14000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.098 - INFO - employees: processed 15000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.115 - INFO - employees: processed 16000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.145 - INFO - employees: processed 17000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.163 - INFO - employees: processed 18000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.180 - INFO - employees: processed 19000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.198 - INFO - employees: processed 20000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.214 - INFO - employees: processed 21000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.230 - INFO - employees: processed 22000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.246 - INFO - employees: processed 23000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.263 - INFO - employees: processed 24000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.280 - INFO - employees: processed 25000 source rows; inserted 0, existing updated 0
+2026-09-09 09:32:32.290 - INFO - employees: source rows=25592, inserted=0, existing updated=0; id and badgeId preserved
+2026-09-09 09:32:32.307 - INFO - Committing employee transaction before starting worker processes...
+2026-09-09 09:32:32.309 - INFO - Starting 8 worker processes for 9 historical tables
+2026-09-09 09:32:32.814 - INFO - Worker completed dbo.research: {'source': 2511, 'inserted': 2511}
+2026-09-09 09:32:32.955 - INFO - Worker completed dbo.jobPosition: {'source': 9613, 'inserted': 9613}
+2026-09-09 09:32:33.144 - INFO - Worker completed dbo.tenure: {'source': 23628, 'inserted': 23628}
+2026-09-09 09:32:33.380 - INFO - Worker completed dbo.academicCertificate: {'source': 28856, 'inserted': 28856}
+2026-09-09 09:32:33.670 - INFO - Worker completed dbo.committee: {'source': 37649, 'inserted': 37649}
+2026-09-09 09:32:35.888 - INFO - Worker completed dbo.jobRank: {'source': 144849, 'inserted': 144849}
+2026-09-09 09:32:37.251 - INFO - Worker completed dbo.trainingCourse: {'source': 206935, 'inserted': 206935}
+2026-09-09 09:32:39.320 - INFO - Worker completed dbo.annualPerformance: {'source': 353896, 'inserted': 353896}
+2026-09-09 09:32:42.420 - INFO - Worker completed dbo.lettersOfAppreciation: {'source': 422472, 'inserted': 422472}
+2026-09-09 09:32:42.435 - INFO - MSSQL sync completed successfully.
+2026-09-09 09:35:01.471 - INFO - ==========================================================================================
+2026-09-09 09:35:01.472 - INFO - Starting MSSQL sync; detailed log: C:\Users\mmrma\Desktop\foxpro2\compare_mssql.log
+2026-09-09 09:35:01.480 - INFO - Source SQLite database: C:\Users\mmrma\Desktop\foxpro2\data_all.db (189.18 MB)
+2026-09-09 09:35:01.480 - INFO - Destination SQL Server: server=(localdb)\MSSQLLocalDB, database=Nocportal, driver=ODBC Driver 18 for SQL Server, authentication=Windows trusted
+2026-09-09 09:35:01.481 - INFO - Opening source SQLite database...
+2026-09-09 09:35:01.481 - INFO - Source SQLite connection opened
+2026-09-09 09:35:01.482 - INFO - Opening SQL Server connection...
+2026-09-09 09:35:01.507 - INFO - SQL Server connection opened in 0.02 seconds
+2026-09-09 09:35:01.508 - INFO - Connected identity: login=DESKTOP-DMUBVEV\vega, database=Nocportal
+2026-09-09 09:35:01.509 - INFO - Target table dbo.employees: 37 columns (id, employeeId, badgeId, email, active, name, jobTitle, jobPosition, authority, department, division, unit, location, educationalLevel, fieldOfStudy, nocDate, birthDate, hiringDate, address, placeOfBirth, religion, ethnic, motherName, graduationYear, status, statusDate, sex, FailedLoginAttempts, LockedUntil, LastFailedLoginAt, isdeleted, user_edit, edit_time, who_edited_user, fcmToken, wife_name, home_location)
+2026-09-09 09:35:01.509 - INFO - employees: mapped 19 columns; missing optional columns: none
+2026-09-09 09:35:01.509 - INFO - Reading existing employees from dbo.employees
+2026-09-09 09:35:01.829 - INFO - Loaded 25698 existing employee rows from MSSQL
+2026-09-09 09:35:01.848 - INFO - employees: processed 1000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.865 - INFO - employees: processed 2000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.882 - INFO - employees: processed 3000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.900 - INFO - employees: processed 4000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.917 - INFO - employees: processed 5000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.933 - INFO - employees: processed 6000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.950 - INFO - employees: processed 7000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.966 - INFO - employees: processed 8000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.983 - INFO - employees: processed 9000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:01.999 - INFO - employees: processed 10000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.015 - INFO - employees: processed 11000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.031 - INFO - employees: processed 12000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.048 - INFO - employees: processed 13000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.063 - INFO - employees: processed 14000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.079 - INFO - employees: processed 15000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.094 - INFO - employees: processed 16000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.111 - INFO - employees: processed 17000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.128 - INFO - employees: processed 18000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.145 - INFO - employees: processed 19000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.161 - INFO - employees: processed 20000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.178 - INFO - employees: processed 21000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.194 - INFO - employees: processed 22000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.211 - INFO - employees: processed 23000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.227 - INFO - employees: processed 24000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.243 - INFO - employees: processed 25000 source rows; inserted 0, existing updated 0
+2026-09-09 09:35:02.247 - INFO - dbo.employees: inserting final batch of 1 rows (total so far: 0)
+2026-09-09 09:35:02.257 - INFO - employees: source rows=25592, inserted=1, existing updated=0; id and badgeId preserved
+2026-09-09 09:35:02.275 - INFO - Committing employee transaction before starting worker processes...
+2026-09-09 09:35:02.277 - INFO - Starting 8 worker processes for 9 historical tables
+2026-09-09 09:35:02.624 - INFO - Worker completed dbo.research: {'source': 2511, 'inserted': 2511}
+2026-09-09 09:35:03.029 - INFO - Worker completed dbo.jobPosition: {'source': 9613, 'inserted': 9613}
+2026-09-09 09:35:03.086 - INFO - Worker completed dbo.tenure: {'source': 23628, 'inserted': 23628}
+2026-09-09 09:35:03.312 - INFO - Worker completed dbo.academicCertificate: {'source': 28856, 'inserted': 28856}
+2026-09-09 09:35:03.658 - INFO - Worker completed dbo.committee: {'source': 37649, 'inserted': 37649}
+2026-09-09 09:35:09.709 - INFO - Worker completed dbo.jobRank: {'source': 144849, 'inserted': 144849}
+2026-09-09 09:35:10.787 - INFO - Worker completed dbo.trainingCourse: {'source': 206935, 'inserted': 206935}
+2026-09-09 09:35:11.002 - INFO - Worker completed dbo.annualPerformance: {'source': 353896, 'inserted': 353896}
+2026-09-09 09:35:14.438 - INFO - Worker completed dbo.lettersOfAppreciation: {'source': 422472, 'inserted': 422472}
+2026-09-09 09:35:14.496 - INFO - MSSQL sync completed successfully.

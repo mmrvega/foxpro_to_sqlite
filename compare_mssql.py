@@ -25,6 +25,12 @@ BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 DATA_ALL_DB = os.path.join(BASE_PATH, "data_all.db")
 DEFAULT_DRIVER = "ODBC Driver 18 for SQL Server"
 DEFAULT_LOG_FILE = os.path.join(BASE_PATH, "compare_mssql.log")
+SQL_SERVER_DRIVER_CANDIDATES = (
+    "ODBC Driver 18 for SQL Server",
+    "ODBC Driver 17 for SQL Server",
+    "ODBC Driver 13 for SQL Server",
+    "SQL Server",
+)
 
 TABLE_MAPPINGS: Dict[str, Tuple[str, Dict[str, str]]] = {
     "employees": ("FILE_ALL", {
@@ -106,6 +112,29 @@ def identifier(name: str) -> str:
     return f"[{name}]"
 
 
+def resolve_driver(requested_driver: str) -> str:
+    """Use the requested driver, or fall back to an installed SQL Server driver."""
+    import pyodbc
+
+    installed = pyodbc.drivers()
+    if requested_driver in installed:
+        return requested_driver
+    for candidate in SQL_SERVER_DRIVER_CANDIDATES:
+        if candidate in installed:
+            logging.warning(
+                "Configured ODBC driver '%s' is not installed; using '%s'. Installed drivers: %s",
+                requested_driver,
+                candidate,
+                ", ".join(installed) or "none",
+            )
+            return candidate
+    raise RuntimeError(
+        "No SQL Server ODBC driver is installed. "
+        "Install Microsoft ODBC Driver 17 or 18 for SQL Server, or set --driver. "
+        f"Installed drivers: {', '.join(installed) or 'none'}"
+    )
+
+
 def clean_value(value):
     if value is None:
         return None
@@ -180,8 +209,44 @@ def required_column_defaults(cursor, table_name: str, target_columns: Sequence[s
     return defaults
 
 
+def prepare_id_generation(cursor, table_name: str, target_columns: Sequence[str]) -> Tuple[bool, int]:
+    """Prepare explicit IDs when dbo.<table>.id is not an IDENTITY column."""
+    id_column = next((column for column in target_columns if column.lower() == "id"), None)
+    if not id_column:
+        return True, 0
+
+    cursor.execute(
+        "SELECT COLUMNPROPERTY(OBJECT_ID(?), ?, 'IsIdentity')",
+        f"dbo.{table_name}", id_column,
+    )
+    identity_flag = cursor.fetchone()[0]
+    if identity_flag == 1:
+        logging.info("dbo.%s: id is IDENTITY; SQL Server will generate IDs", table_name)
+        return True, 0
+
+    cursor.execute(
+        f"SELECT ISNULL(MAX({identifier(id_column)}), 0) FROM {identifier(table_name)}"
+    )
+    max_id = cursor.fetchone()[0]
+    next_id = int(max_id or 0) + 1
+    cursor.execute(
+        f";WITH numbered AS ("
+        f"SELECT {identifier(id_column)}, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS row_num "
+        f"FROM {identifier(table_name)} WHERE {identifier(id_column)} IS NULL) "
+        f"UPDATE numbered SET {identifier(id_column)} = ? + row_num - 1",
+        next_id,
+    )
+    filled = cursor.rowcount
+    if filled and filled > 0:
+        logging.info("dbo.%s: filled %d existing NULL IDs", table_name, filled)
+        next_id += filled
+    logging.info("dbo.%s: explicit ID generation enabled; next ID=%d", table_name, next_id)
+    return False, next_id
+
+
 def insert_rows(cursor, table_name: str, rows: Iterable[dict], target_columns: Sequence[str],
-                batch_size=1000, required_defaults: Dict[str, object] = None):
+                batch_size=1000, required_defaults: Dict[str, object] = None,
+                identity_id: bool = True, next_id: int = 0):
     rows = list(rows)
     if not rows:
         return 0
@@ -191,9 +256,11 @@ def insert_rows(cursor, table_name: str, rows: Iterable[dict], target_columns: S
         required_defaults = required_column_defaults(cursor, table_name, target_columns)
     columns = [
         column for column in target_columns
-        if column.lower() != "id"
+        if (column.lower() != "id" or not identity_id)
         and any(row.get(column) is not None for row in rows)
     ]
+    if not identity_id and "id" not in [column.lower() for column in columns]:
+        columns.insert(0, next(column for column in target_columns if column.lower() == "id"))
     for column in required_defaults:
         if column not in columns:
             columns.append(column)
@@ -208,10 +275,14 @@ def insert_rows(cursor, table_name: str, rows: Iterable[dict], target_columns: S
     inserted = 0
     logging.debug("Preparing inserts for dbo.%s using %d columns", table_name, len(columns))
     for row in rows:
-        batch.append(tuple(
-            row.get(column) if row.get(column) is not None else required_defaults.get(column)
-            for column in columns
-        ))
+        values = []
+        for column in columns:
+            if column.lower() == "id" and not identity_id:
+                values.append(next_id)
+                next_id += 1
+            else:
+                values.append(row.get(column) if row.get(column) is not None else required_defaults.get(column))
+        batch.append(tuple(values))
         if len(batch) >= batch_size:
             logging.info("dbo.%s: inserting batch of %d rows (total so far: %d)", table_name, len(batch), inserted)
             cursor.fast_executemany = True
@@ -239,9 +310,28 @@ def overwrite_table(cursor, source_rows_list: Sequence[dict], table_name: str,
     cursor.execute(f"DELETE FROM {identifier(table_name)}")
     logging.info("dbo.%s: deleted %d rows", table_name, cursor.rowcount)
     required_defaults = required_column_defaults(cursor, table_name, target_columns)
+    # Auto-fill isdeleted and user_edit with 0 for historical tables
+    available = {column.lower(): column for column in target_columns}
+    if "isdeleted" in available:
+        required_defaults[available["isdeleted"]] = 0
+    if "user_edit" in available:
+        required_defaults[available["user_edit"]] = 0
+    identity_id, next_id = prepare_id_generation(cursor, table_name, target_columns)
+    if identity_id:
+        id_column = next((column for column in target_columns if column.lower() == "id"), None)
+        if id_column:
+            try:
+                cursor.execute(
+                    f"DBCC CHECKIDENT ('dbo.{table_name}', RESEED, 0)"
+                )
+                logging.info("dbo.%s: identity reset to 0; first inserted ID will be 1", table_name)
+            except Exception as error:
+                logging.warning("dbo.%s: could not reset identity: %s", table_name, error)
     inserted = insert_rows(
         cursor, table_name, source_rows_list, target_columns,
         required_defaults=required_defaults,
+        identity_id=identity_id,
+        next_id=next_id,
     )
     logging.info("dbo.%s: inserted %d rows", table_name, inserted)
     return inserted
@@ -301,6 +391,7 @@ def sync_employees(cursor, source_conn, target_columns):
     }
     logging.info("Loaded %d existing employee rows from MSSQL", len(master_rows))
     required_defaults = required_column_defaults(cursor, "employees", target_columns)
+    identity_id, next_id = prepare_id_generation(cursor, "employees", target_columns)
     inserted = 0
     updated = 0
     source_count = 0
@@ -314,7 +405,11 @@ def sync_employees(cursor, source_conn, target_columns):
             inserted += insert_rows(
                 cursor, "employees", [row], target_columns,
                 required_defaults=required_defaults,
+                identity_id=identity_id,
+                next_id=next_id,
             )
+            if not identity_id:
+                next_id += 1
             if inserted % 1000 == 0:
                 logging.info("employees: processed %d source rows; inserted %d, existing updated %d", source_count, inserted, updated)
             continue
@@ -356,10 +451,11 @@ def sync_database(args):
         raise FileNotFoundError(f"Source database not found: {DATA_ALL_DB}")
 
     logging.info("Source SQLite database: %s (%0.2f MB)", DATA_ALL_DB, os.path.getsize(DATA_ALL_DB) / 1024 / 1024)
+    driver = resolve_driver(args.driver)
     logging.info("Destination SQL Server: server=%s, database=%s, driver=%s, authentication=%s",
-                 args.server, args.database, args.driver, "Windows trusted" if args.trusted else "SQL login")
+                 args.server, args.database, driver, "Windows trusted" if args.trusted else "SQL login")
     connection_string = (
-        f"DRIVER={{{args.driver}}};SERVER={args.server};DATABASE={args.database};"
+        f"DRIVER={{{driver}}};SERVER={args.server};DATABASE={args.database};"
         + ("Trusted_Connection=yes;TrustServerCertificate=yes;" if args.trusted else
            f"UID={args.username};PWD={args.password};TrustServerCertificate=yes;")
     )
@@ -416,7 +512,7 @@ def sync_database(args):
 
 def main():
     parser = argparse.ArgumentParser(description="Sync data_all.db into a SQL Server database")
-    parser.add_argument("--server", default=os.getenv("MSSQL_SERVER", r"(localdb)\MSSQLLocalDB"))
+    parser.add_argument("--server", default=os.getenv("MSSQL_SERVER", r".\SQLEXPRESS2022"))
     parser.add_argument("--database", default=os.getenv("MSSQL_DATABASE", "Nocportal"), required=False)
     parser.add_argument("--driver", default=os.getenv("MSSQL_DRIVER", DEFAULT_DRIVER))
     parser.add_argument("--trusted", action="store_true", help="Use Windows integrated authentication")
